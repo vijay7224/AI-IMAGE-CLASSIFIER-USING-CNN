@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Classifier | Smart Vision</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --secondary: #0072ff;
+            --dark: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.09);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #b0c4de;
+            font-size: 1.05rem;
+            margin-bottom: 30px;
+        }
+
+        /* Upload Area */
+        .upload-box {
+            border: 3px dashed var(--primary);
+            border-radius: 20px;
+            padding: 50px 20px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-box:hover {
+            background: rgba(0, 212, 255, 0.08);
+            border-color: #00ffcc;
+        }
+
+        .upload-box.dragover {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: #00ffcc;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Image Preview */
+        .preview {
+            margin-top: 25px;
+            display: none;
+            position: relative;
+        }
+
+        .preview img {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Buttons */
+        .btn {
+            margin-top: 25px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 114, 255, 0.35);
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 114, 255, 0.45);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Loader */
+        .loader {
+            display: none;
+            margin: 25px auto;
+            text-align: center;
+        }
+
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(0, 212, 255, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            margin-top: 12px;
+            color: #88ccff;
+            font-size: 0.95rem;
+        }
+
+        /* Result */
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            text-align: left;
+        }
+
+        .result h3 {
+            color: #34d399;
+            margin-bottom: 10px;
+        }
+
+        .confidence {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #67e8f9;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧠 AI Image Classifier</h1>
+    <p class="subtitle">Upload an image and let AI identify the object</p>
+
+    <form action="/predict" method="POST" enctype="multipart/form-data" id="uploadForm">
+
+        <label class="upload-box" id="drop-area">
+            <div class="upload-icon">📸</div>
+            <div style="font-size: 1.1rem; font-weight: 500;">
+                Drag & Drop or <span style="color: var(--primary);">Click to Upload</span>
+            </div>
+            <small style="color: #94a3b8; margin-top: 8px; display: block;">Supported: JPG, PNG, JPEG</small>
+            <input type="file" name="file" id="fileInput" accept="image/*" required>
+        </label>
+
+        <div class="preview" id="previewBox">
+            <img id="previewImg" alt="Preview">
+        </div>
+
+        <button type="submit" class="btn" id="predictBtn">🚀 Predict with AI</button>
+    </form>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Analyzing image with AI...</div>
+    </div>
+
+    {% if prediction %}
+    <div class="result">
+        <h3>✅ Prediction Result</h3>
+        <p style="font-size: 1.3rem; margin: 8px 0;">
+            <strong>{{ prediction }}</strong>
+        </p>
+        {% if confidence %}
+        <p class="confidence">Confidence: {{ confidence }}%</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Powered by Deep Learning • Flask Backend
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById("fileInput");
+    const previewBox = document.getElementById("previewBox");
+    const previewImg = document.getElementById("previewImg");
+    const dropArea = document.getElementById("drop-area");
+    const loader = document.getElementById("loader");
+    const form = document.getElementById("uploadForm");
+
+    // File Select
+    fileInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            showPreview(file);
+        }
+    });
+
+    // Drag & Drop
+    dropArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropArea.classList.add("dragover");
+    });
+
+    dropArea.addEventListener("dragleave", () => {
+        dropArea.classList.remove("dragover");
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropArea.classList.remove("dragover");
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith("image/")) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(file);
+        }
+    });
+
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewBox.style.display = "block";
+        }
+        reader.readAsDataURL(file);
+    }
+
+    // Show loader on form submit
+    form.addEventListener("submit", function() {
+        loader.style.display = "block";
+        // Optional: Disable button to prevent double submission
+        document.getElementById("predictBtn").disabled = true;
+    });
+
+    // Reset form after successful submission (optional improvement)
+    // You can handle this from Flask using JavaScript if needed
+</script>
+
+</body>
+</html>

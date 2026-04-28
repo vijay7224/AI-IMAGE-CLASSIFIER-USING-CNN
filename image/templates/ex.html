@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image Classifier</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #141e30, #243b55);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.container {
+    width: 450px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+/* Upload Box */
+.upload-box {
+    border: 2px dashed #00d4ff;
+    border-radius: 15px;
+    padding: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+}
+
+.upload-box.dragover {
+    background: rgba(0,212,255,0.1);
+    border-color: #00ffcc;
+}
+
+.upload-box:hover {
+    background: rgba(0,212,255,0.08);
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Image Preview */
+.preview {
+    margin-top: 20px;
+    display: none;
+}
+
+.preview img {
+    width: 100%;
+    border-radius: 12px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* Button */
+.btn {
+    margin-top: 20px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #00d4ff, #0072ff);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,114,255,0.4);
+}
+
+/* Loader */
+.loader {
+    display: none;
+    margin-top: 20px;
+}
+
+.loader div {
+    width: 10px;
+    height: 10px;
+    margin: 3px;
+    background: #00d4ff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 0.6s infinite alternate;
+}
+
+.loader div:nth-child(2) { animation-delay: 0.2s; }
+.loader div:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    to { transform: translateY(-10px); }
+}
+
+/* Result */
+.result {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0,255,150,0.15);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.footer {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🧠 AI Image Classifier</h1>
+    <p>Upload image to detect object</p>
+
+    <form action="/predict" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+
+        <label class="upload-box" id="drop-area">
+            📂 Drag & Drop or Click to Upload
+            <input type="file" name="file" id="fileInput" accept="image/*">
+        </label>
+
+        <div class="preview" id="previewBox">
+            <img id="previewImg">
+        </div>
+
+        <button type="submit" class="btn">🚀 Predict</button>
+    </form>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div></div><div></div><div></div>
+    </div>
+
+    {% if prediction %}
+    <div class="result">
+        Prediction: {{ prediction }} <br>
+        {% if confidence %}
+        Confidence: {{ confidence }}%
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="footer">Deep Learning • Flask • UI</div>
+</div>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const previewBox = document.getElementById("previewBox");
+const previewImg = document.getElementById("previewImg");
+const dropArea = document.getElementById("drop-area");
+
+fileInput.addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    previewImg.src = URL.createObjectURL(file);
+    previewBox.style.display = "block";
+});
+
+// Drag & Drop
+dropArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropArea.classList.add("dragover");
+});
+
+dropArea.addEventListener("dragleave", () => {
+    dropArea.classList.remove("dragover");
+});
+
+dropArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropArea.classList.remove("dragover");
+    fileInput.files = e.dataTransfer.files;
+
+    const file = e.dataTransfer.files[0];
+    previewImg.src = URL.createObjectURL(file);
+    previewBox.style.display = "block";
+});
+
+// Loader
+function showLoader() {
+    document.getElementById("loader").style.display = "block";
+}
+</script>
+
+</body>
+</html>
